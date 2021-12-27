@@ -1,11 +1,12 @@
 import pyodbc as sql
 import pandas as pd
 import datetime as dt
-from urllib import request, error
+import requests
 import os
+import json
 
 def main():  
-    my_games_flag = 1 # 0/1 value; if 0 use below user, if 1 use file
+    my_games_flag = 1
 
     conn = sql.connect('Driver={ODBC Driver 17 for SQL Server};Server=HUNT-PC1;Database=ChessAnalysis;Trusted_Connection=yes;')   
     if my_games_flag == 1:     
@@ -33,15 +34,22 @@ def main():
 
     dload_path = r'C:\Users\eehunt\Documents\Chess\Scripts\Lichess'
     for i in users:
-        """TODO Look into using authentication to speed up a bit, iterating over URL's is slow"""
+        # get auth token
+        fpath = r'C:\Users\eehunt\Repository'
+        fname = 'keys.json'
+        with open(os.path.join(fpath, fname), 'r') as f:
+            json_data = json.load(f)
+        token_value = json_data.get('LichessAPIToken')
+
         dload_url = 'https://lichess.org/api/games/user/' + i[1] + '?since=' + utc_start + '&until=' + utc_end
         dload_name = i[1] + '_' + str(yyyy) + str(mm) + '.pgn'
         dload_file = os.path.join(dload_path, dload_name)
-        try:
-            request.urlretrieve(dload_url, dload_file)
-        except error.HTTPError.code as e:
-            err = e.getcode()
-            print(str(err) + ' error on ' + i[1])
+        hdr = {'Authorization': 'Bearer ' + token_value}
+        # add error handling if url is bad
+        with requests.get(dload_url, headers=hdr, stream=True) as resp:
+            with open(dload_file, 'wb') as f:
+                for chunk in resp.iter_content(chunk_size=8196):
+                    f.write(chunk)
 
     # verify files exist to continue processing
     file_list = [f for f in os.listdir(dload_path) if os.path.isfile(os.path.join(dload_path, f))]
@@ -53,7 +61,7 @@ def main():
         else:
             merge_name = 'LichessMerged_Multiple_' + str(yyyy) + str(mm) + '.pgn'
             clean_name = 'Lichess_Multiple_' + str(yyyy) + str(mm) + '.pgn'
-            cmd_text = 'copy /B *.pgn ' + merge_name # /B will avoid the random extra char at the end
+            cmd_text = 'copy /B *.pgn ' + merge_name
             if os.getcwd != dload_path:
                 os.chdir(dload_path)
             os.system('cmd /C ' + cmd_text)
