@@ -1,7 +1,7 @@
 import pyodbc as sql
 import pandas as pd
 import datetime as dt
-from urllib import request
+import requests
 import os
 
 def main():
@@ -31,7 +31,13 @@ def main():
         url = 'https://api.chess.com/pub/player' + '/' + i[1] + '/games/' + str(yyyy) + '/' + str(mm) + '/pgn'
         dload_name = i[1] + '_' + str(yyyy) + str(mm) + '.pgn'
         dload_file = os.path.join(dload_path, dload_name)
-        request.urlretrieve(url, dload_file)
+        with requests.get(url, stream=True) as resp:
+            if resp.status_code != 200:
+                print('Unable to complete request! Request returned code ' + resp.status_code)
+            else:
+                with open(dload_file, 'wb') as f:
+                    for chunk in resp.iter_content(chunk_size=8196):
+                        f.write(chunk)
 
     file_list = [f for f in os.listdir(dload_path) if os.path.isfile(os.path.join(dload_path, f))]
     if len(file_list) > 0:
