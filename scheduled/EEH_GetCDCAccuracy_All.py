@@ -44,8 +44,8 @@ def main():
                         acc_w = 'NULL'
                         acc_b = 'NULL'
                         if tmp_acc is not None:
-                            acc_w = tmp_acc.get('white')
-                            acc_b = tmp_acc.get('black')
+                            acc_w = tmp_acc.get('white') if tmp_acc.get('white') is not None else 'NULL'
+                            acc_b = tmp_acc.get('black') if tmp_acc.get('black') is not None else 'NULL'
                         imp_write.write(src_id + DELIM + str(acc_w) + DELIM + str(acc_b) + NEWLINE)
 
 
