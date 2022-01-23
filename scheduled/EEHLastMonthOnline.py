@@ -156,7 +156,7 @@ def processfiles():
     wfile.close()
 
     # sort game file
-    pgn = open(os.path.join(output_path, updated_tc_name), mode='r', encoding='utf-8', errors='ignore')
+    pgn = open(os.path.join(output_path, updated_tc_name), mode='r', encoding='utf-8', errors='replace')
 
     idx = []
     game_date = []
@@ -174,22 +174,105 @@ def processfiles():
     sort_file = open(os.path.join(output_path, sort_name), 'w')
     idx_sort = [x for _, x in sorted(zip(game_date, idx))]
     for i in idx_sort:
-        txt = str(game_text[i]).encode(encoding='utf-8', errors='replace')
-        sort_file.write(str(txt) + '\n\n')
+        sort_file.write(str(game_text[i]) + '\n\n')
     sort_file.close()  
     pgn.close()
+    
+    # create White and Black files
+    white_tag = 'WhiteTag.txt'
+    white_tag_full = os.path.join(output_path, white_tag)
+    with open(white_tag_full, 'w') as wt:
+        wt.write('White "NefariousNebula"\n')
+        wt.write('White "AimlessAlgebraist"')
+    
+    black_tag = 'BlackTag.txt'
+    black_tag_full = os.path.join(output_path, black_tag)
+    with open(black_tag_full, 'w') as bl:
+        bl.write('Black "NefariousNebula"\n')
+        bl.write('Black "AimlessAlgebraist"')
+    
+    white_all = 'White_All_' + yyyy + mm + os.path.splitext(sort_name)[1]
+    black_all = 'Black_All_' + yyyy + mm + os.path.splitext(sort_name)[1]
 
-    # need to rerun a dummy pgn-extract basically to reformat file from bytes to standard pgn
-    clean_name = 'EEH_Online_All_' + yyyy + mm + os.path.splitext(sort_name)[1]
-    cmd_text = 'pgn-extract -C -N -V -D --quiet --output ' + clean_name + ' ' + sort_name
+    cmd_text = 'pgn-extract --quiet -t' + white_tag + ' --output ' + white_all + ' ' + sort_name
     if os.getcwd != output_path:
         os.chdir(output_path)
     os.system('cmd /C ' + cmd_text)
+
+    cmd_text = 'pgn-extract --quiet -t' + black_tag + ' --output ' + black_all + ' ' + sort_name
+    if os.getcwd != output_path:
+        os.chdir(output_path)
+    os.system('cmd /C ' + cmd_text)
+
+    # create CC and Live color-specific files
+    cc_tag = 'CCTag.txt'
+    cc_tag_full = os.path.join(output_path, cc_tag)
+    with open(cc_tag_full, 'w') as cc:
+        cc.write('TimeControl >= "86400"')
     
+    live_tag = 'LiveTag.txt'
+    live_tag_full = os.path.join(output_path, live_tag)
+    with open(live_tag_full, 'w') as lv:
+        lv.write('TimeControl <= "86399"')
+    
+    white_cc = 'EEH_Online_CC_White_' + yyyy + mm + os.path.splitext(white_all)[1]
+    black_cc = 'EEH_Online_CC_Black_' + yyyy + mm + os.path.splitext(black_all)[1]
+    white_live = 'EEH_Online_Live_White_' + yyyy + mm + os.path.splitext(white_all)[1]
+    black_live = 'EEH_Online_Live_Black_' + yyyy + mm + os.path.splitext(black_all)[1]
+
+    cmd_text = 'pgn-extract --quiet -t' + cc_tag + ' --output ' + white_cc + ' ' + white_all
+    if os.getcwd != output_path:
+        os.chdir(output_path)
+    os.system('cmd /C ' + cmd_text)
+
+    cmd_text = 'pgn-extract --quiet -t' + cc_tag + ' --output ' + black_cc + ' ' + black_all
+    if os.getcwd != output_path:
+        os.chdir(output_path)
+    os.system('cmd /C ' + cmd_text)
+
+    cmd_text = 'pgn-extract --quiet -t' + live_tag + ' --output ' + white_live + ' ' + white_all
+    if os.getcwd != output_path:
+        os.chdir(output_path)
+    os.system('cmd /C ' + cmd_text)
+
+    cmd_text = 'pgn-extract --quiet -t' + live_tag + ' --output ' + black_live + ' ' + black_all
+    if os.getcwd != output_path:
+        os.chdir(output_path)
+    os.system('cmd /C ' + cmd_text)
+
+    # backtrack and create complete CC and Live files
+    cc_all = 'EEH_Online_CC_All_' + yyyy + mm + os.path.splitext(sort_name)[1]
+    live_all = 'EEH_Online_Live_All_' + yyyy + mm + os.path.splitext(sort_name)[1]
+    cmd_text = 'pgn-extract --quiet -t' + cc_tag + ' --output ' + cc_all + ' ' + sort_name
+    if os.getcwd != output_path:
+        os.chdir(output_path)
+    os.system('cmd /C ' + cmd_text)
+
+    cmd_text = 'pgn-extract --quiet -t' + live_tag + ' --output ' + live_all + ' ' + sort_name
+    if os.getcwd != output_path:
+        os.chdir(output_path)
+    os.system('cmd /C ' + cmd_text)
+
     # clean up
     os.remove(os.path.join(output_path, merge_name))
     os.remove(os.path.join(output_path, updated_tc_name))
-    os.remove(os.path.join(output_path, sort_name))
+    os.remove(os.path.join(output_path, white_all))
+    os.remove(os.path.join(output_path, black_all))
+    os.remove(white_tag_full)
+    os.remove(black_tag_full)
+    os.remove(cc_tag_full)
+    os.remove(live_tag_full)
+    
+    old_name = os.path.join(output_path, sort_name)
+    new_name = os.path.join(output_path, 'EEH_Online_All_' + yyyy + mm + os.path.splitext(sort_name)[1])
+    os.rename(old_name, new_name)
+
+    # delete empty files, if no games are in a file
+    dir_files = [f for f in os.listdir(output_path) if os.path.isfile(os.path.join(output_path, f))]
+    for f in dir_files:
+        if os.path.getsize(os.path.join(output_path, f)) == 0:
+            os.remove(os.path.join(output_path, f))
+
 
 def main():
     archiveold()

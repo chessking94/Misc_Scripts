@@ -23,8 +23,7 @@ def main():
     tmpmo = first.strftime('%m')
     yrmnth.append([tmpyr, tmpmo]) # current month, for timing reasons
 
-    #imp_path = r'C:\FileProcessing\Import'
-    imp_path = r'C:\Users\eehunt\Repository\zMisc_Scripts\scheduled'
+    imp_path = r'C:\FileProcessing\Import'
     imp_name = usr + '_ChessCom_Accuracy_' + yyyy + mm + '.txt'
     imp_full = os.path.join(imp_path, imp_name)
 
