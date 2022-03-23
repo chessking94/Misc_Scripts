@@ -4,6 +4,9 @@ from urllib import request, error
 import pyodbc as sql
 import pandas as pd
 
+# TODO: Add argument parsing to allow for command-line options, thinking primarily of refreshing a specific user vs. entire dataset
+# Could do more like only those active within last month, only one site, etc
+
 def ChessComUserUpdate():
     conn = sql.connect('Driver={ODBC Driver 17 for SQL Server};Server=HUNT-PC1;Database=ChessAnalysis;Trusted_Connection=yes;')    
     qry_text = "SELECT PlayerID, Username FROM UsernameXRef WHERE Source = 'Chess.com'"
@@ -143,7 +146,7 @@ def LichessUserUpdate():
                 sql_cmd = sql_cmd + ", DailyGames = " + str(daily_games)
                 sql_cmd = sql_cmd + ' WHERE PlayerID = ' + str(i[0])
             except:
-                if 'closed' in json_loaded:
+                if 'closed' or 'disabled' in json_loaded:
                     sql_cmd = "UPDATE UsernameXRef SET UserStatus = 'Closed' WHERE PlayerID = " + str(i[0])
                 else:
                     sql_cmd = "UPDATE UsernameXRef SET LastActiveOnline = NULL WHERE PlayerID = " + str(i[0])
