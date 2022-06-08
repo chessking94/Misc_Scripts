@@ -21,7 +21,8 @@ def archiveold():
             sh.move(old_name, new_name)
 
 def chesscomgames():
-    conn = sql.connect('Driver={ODBC Driver 17 for SQL Server};Server=HUNT-PC1;Database=ChessAnalysis;Trusted_Connection=yes;')   
+    conn_str = get_connstr()
+    conn = sql.connect(conn_str)
     qry_text = "SELECT ISNULL(LastName, '') + ISNULL(FirstName, '') AS PlayerName, Username FROM UsernameXRef WHERE EEHFlag = 1 AND Source = 'Chess.com'"
     users = pd.read_sql(qry_text, conn).values.tolist()
     conn.close()
@@ -65,8 +66,27 @@ def chesscomgames():
         new_loc = os.path.join(output_path, clean_name)
         os.rename(old_loc, new_loc)
 
-def lichessgames():  
-    conn = sql.connect('Driver={ODBC Driver 17 for SQL Server};Server=HUNT-PC1;Database=ChessAnalysis;Trusted_Connection=yes;')   
+def get_connstr():
+    # get SQL Server connection string from private file
+    fpath = r'C:\Users\eehunt\Repository'
+    fname = 'confidential.json'
+    with open(os.path.join(fpath, fname), 'r') as t:
+        key_data = json.load(t)
+    conn_str = key_data.get('SqlServerConnectionStringTrusted')
+    return conn_str
+
+def get_lichesstoken():
+    # get Lichess API token from private file
+    fpath = r'C:\Users\eehunt\Repository'
+    fname = 'confidential.json'
+    with open(os.path.join(fpath, fname), 'r') as t:
+        key_data = json.load(t)
+    token_value = key_data.get('LichessAPIToken')
+    return token_value
+
+def lichessgames():
+    conn_str = get_connstr()
+    conn = sql.connect(conn_str) 
     qry_text = "SELECT ISNULL(LastName, '') + ISNULL(FirstName, '') AS PlayerName, Username FROM UsernameXRef WHERE EEHFlag = 1 AND Source = 'Lichess'"
     users = pd.read_sql(qry_text, conn).values.tolist()
     conn.close()
@@ -82,13 +102,8 @@ def lichessgames():
     mm = lastmonth.strftime('%m')
 
     dload_path = r'C:\Users\eehunt\Documents\Chess\Scripts\Lichess'
+    token_value = get_lichesstoken()
     for i in users:
-        fpath = r'C:\Users\eehunt\Repository'
-        fname = 'keys.json'
-        with open(os.path.join(fpath, fname), 'r') as f:
-            json_data = json.load(f)
-        token_value = json_data.get('LichessAPIToken')
-
         dload_url = 'https://lichess.org/api/games/user/' + i[1] + '?since=' + utc_start + '&until=' + utc_end
         dload_name = i[1] + '_' + str(yyyy) + str(mm) + '.pgn'
         dload_file = os.path.join(dload_path, dload_name)

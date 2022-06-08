@@ -1,16 +1,20 @@
 import datetime as dt
 import json
-from urllib import request, error
-import pyodbc as sql
+import os
+from urllib import error, request
+
 import pandas as pd
+import pyodbc as sql
 
 # TODO: Add argument parsing to allow for command-line options, thinking primarily of refreshing a specific user vs. entire dataset
 # Could do more like only those active within last month, only one site, etc
 
+# TODO: Convert to requests instead of urllib
+
 def ChessComUserUpdate():
-    conn = sql.connect('Driver={ODBC Driver 17 for SQL Server};Server=HUNT-PC1;Database=ChessAnalysis;Trusted_Connection=yes;')    
+    conn_str = get_connstr()
+    conn = sql.connect(conn_str)
     qry_text = "SELECT PlayerID, Username FROM UsernameXRef WHERE Source = 'Chess.com'"
-    #qry_text = "SELECT PlayerID, Username FROM UsernameXRef WHERE Source = 'Chess.com' AND EEHFlag = 0 AND DownloadFlag = 1"
     users = pd.read_sql(qry_text, conn).values.tolist()
     rec_ct = len(users)
     if rec_ct == 0:
@@ -86,10 +90,19 @@ def ChessComUserUpdate():
         ctr = ctr + 1
     conn.close()
 
+def get_connstr():
+    # get SQL Server connection string from private file
+    fpath = r'C:\Users\eehunt\Repository'
+    fname = 'confidential.json'
+    with open(os.path.join(fpath, fname), 'r') as t:
+        key_data = json.load(t)
+    conn_str = key_data.get('SqlServerConnectionStringTrusted')
+    return conn_str
+
 def LichessUserUpdate():
-    conn = sql.connect('Driver={ODBC Driver 17 for SQL Server};Server=HUNT-PC1;Database=ChessAnalysis;Trusted_Connection=yes;')    
+    conn_str = get_connstr()
+    conn = sql.connect(conn_str)
     qry_text = "SELECT PlayerID, Username FROM UsernameXRef WHERE Source = 'Lichess'"
-    #qry_text = "SELECT PlayerID, Username FROM UsernameXRef WHERE Source = 'Lichess' AND EEHFlag = 0 AND DownloadFlag = 1"
     users = pd.read_sql(qry_text, conn).values.tolist()
     rec_ct = len(users)
     if rec_ct == 0:
