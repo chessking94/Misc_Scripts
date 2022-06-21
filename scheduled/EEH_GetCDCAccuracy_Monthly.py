@@ -1,7 +1,9 @@
 import datetime as dt
-import requests
-import os
 import json
+import os
+
+import requests
+
 
 def main():
     today = dt.date.today()

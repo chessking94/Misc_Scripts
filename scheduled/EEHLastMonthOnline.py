@@ -1,13 +1,15 @@
-import pyodbc as sql
-import pandas as pd
 import datetime as dt
-import requests
-import os
-import json
-import shutil as sh
 import fileinput
+import json
+import os
+import shutil as sh
+
 import chess
 import chess.pgn
+import pandas as pd
+import pyodbc as sql
+import requests
+
 
 def archiveold():
     output_path = r'C:\Users\eehunt\Documents\Chess\Scripts\output'
