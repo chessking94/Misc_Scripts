@@ -52,7 +52,7 @@ def chesscomgames():
     if len(file_list) > 0:
         merge_name = dload_name
         clean_name = 'ChessCom_' + users[0][1] + '_' + str(yyyy) + str(mm) + '.pgn'
-        cmd_text = 'pgn-extract -C -N -V -D --quiet --output ' + clean_name + ' ' + merge_name
+        cmd_text = 'pgn-extract -N -V -D --quiet --output ' + clean_name + ' ' + merge_name
         if os.getcwd != dload_path:
             os.chdir(dload_path)
         os.system('cmd /C ' + cmd_text)
@@ -106,7 +106,7 @@ def lichessgames():
     dload_path = r'C:\Users\eehunt\Documents\Chess\Scripts\Lichess'
     token_value = get_lichesstoken()
     for i in users:
-        dload_url = 'https://lichess.org/api/games/user/' + i[1] + '?since=' + utc_start + '&until=' + utc_end
+        dload_url = 'https://lichess.org/api/games/user/' + i[1] + '?clocks=true&since=' + utc_start + '&until=' + utc_end
         dload_name = i[1] + '_' + str(yyyy) + str(mm) + '.pgn'
         dload_file = os.path.join(dload_path, dload_name)
         hdr = {'Authorization': 'Bearer ' + token_value}
@@ -119,7 +119,7 @@ def lichessgames():
     if len(file_list) > 0:
         merge_name = dload_name
         clean_name = 'Lichess_' + users[0][1] + '_' + str(yyyy) + str(mm) + '.pgn'
-        cmd_text = 'pgn-extract -C -N -V -D --quiet --output ' + clean_name + ' ' + merge_name
+        cmd_text = 'pgn-extract -N -V -D --quiet --output ' + clean_name + ' ' + merge_name
         if os.getcwd != dload_path:
             os.chdir(dload_path)
         os.system('cmd /C ' + cmd_text)
